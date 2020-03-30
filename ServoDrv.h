@@ -63,9 +63,27 @@ extern uint8_t gState_Function;
 class ServoDriver
 {
 public:
-  ServoDriver(struct ServoParameter sp);
+  ServoDriver(void);
+  Set(void);
   void stateCheck();
   int nowState();
+
+  unsigned char ch;       // 0 or 1
+  unsigned char port;     
+  unsigned char onDeg;    // ON時の角度
+  unsigned char offDeg;   // OFF時の角度
+  unsigned char initDeg;  // 電源切る前の角度
+  unsigned char onSpeed;  // OFF->ONのスピード
+  unsigned char offSpeed; // ON->OFFのスピード
+  unsigned char sdir;     // gDirの最新値保存用
+  unsigned char cv;       // EEP-ROM アドレス
+  unsigned char servoAddress;  // ファンクションアドレス
+  unsigned char STR;      // STR LEDポート
+  unsigned char DIV;      // DIV LEDポート
+  
+  unsigned int MinAngle;
+  unsigned int MaxAngle;
+
   
 //  uint8_t gState_Function;
   
@@ -74,8 +92,8 @@ private:
   void SVdetach(char ch);
   void gState( void );
   void servoABwite(char ch, int ref);
-  void writeCV(char ch);  
-  void led(unsigned char ch);
+  void writeCV(void);  
+  void led(void);
   
   char state = ST_STANDABY;    // ステート
   char updownFlg = 0;         // 0:up 1:down
@@ -85,7 +103,6 @@ private:
   int nextDeg;
   float nextDelta;
 
-  ServoParameter lSP;
   ServoParameterPluseWidth lPW;
   
 //  unsigned char port;
@@ -97,8 +114,7 @@ private:
   int nextPwm;
   int styTime;
 
-  Servo   ServoA;  // create servo object to control a servo
-  Servo   ServoB;  // create servo object to control a servo
+  Servo   SERVO;  // create servo object to control a servo
   NmraDcc   Dcc;
   
   enum{

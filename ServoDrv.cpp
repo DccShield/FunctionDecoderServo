@@ -10,30 +10,25 @@ float mapfloat(float x, float in_min, float in_max, float out_min, float out_max
 }
 
 // コンストラクタ
-ServoDriver::ServoDriver(struct ServoParameter sp)
+ServoDriver::ServoDriver()
 {
-  lSP = sp;
+  // 何もしない
+}
+ServoDriver::Set()
+{
+  pinMode(port, OUTPUT);
+  digitalWrite(port, HIGH);
 
-  pinMode(lSP.port, OUTPUT);
-  digitalWrite(lSP.port, HIGH);
-
-  lPW.onDeg = map((float)lSP.onDeg,lSP.offDeg,lSP.onDeg,lSP.MinAngle,lSP.MaxAngle);    // ON時の角度
-  lPW.offDeg = map((float)lSP.offDeg,lSP.offDeg,lSP.onDeg,lSP.MinAngle,lSP.MaxAngle);   // OFF時の角度
-  lPW.onDelta = mapfloat(((float)(lSP.onDeg - lSP.offDeg) / lSP.onSpeed / 100),(float)lSP.offDeg,(float)lSP.onDeg,0,(float)(lSP.MaxAngle-lSP.MinAngle)); // offDegからonDegまでの10ms時の移動量を算出
-  lPW.offDelta = mapfloat(((float)(lSP.offDeg - lSP.onDeg) / lSP.offSpeed / 100),(float)lSP.offDeg,(float)lSP.onDeg,0,(float)(lSP.MaxAngle-lSP.MinAngle)); // offDegからonDegまでの10ms時の移動量を算出
+  lPW.onDeg = map((float)onDeg,offDeg,onDeg,MinAngle,MaxAngle);    // ON時の角度
+  lPW.offDeg = map((float)offDeg,offDeg,onDeg,MinAngle,MaxAngle);   // OFF時の角度
+  lPW.onDelta = mapfloat(((float)(onDeg - offDeg) / onSpeed / 100),(float)offDeg,(float)onDeg,0,(float)(MaxAngle-MinAngle)); // offDegからonDegまでの10ms時の移動量を算出
+  lPW.offDelta = mapfloat(((float)(offDeg - onDeg) / offSpeed / 100),(float)offDeg,(float)onDeg,0,(float)(MaxAngle-MinAngle)); // offDegからonDegまでの10ms時の移動量を算出
   lPW.nowDeg = 0;
 
-  adr = lSP.servoAddress;
+  SERVO.attach(port, MinAngle, MaxAngle);
+  delay(20);
+  SERVO.detach();
 
-  if(lSP.ch == 0){
-    ServoA.attach(lSP.port, lSP.MinAngle, lSP.MaxAngle);
-    delay(20);
-    ServoA.detach();
-  } else if(lSP.ch == 1){
-    ServoB.attach(lSP.port, lSP.MinAngle, lSP.MaxAngle);
-    delay(20);
-    ServoB.detach();
-  }
   state = ST_STANDABY;
 }
 
@@ -43,64 +38,35 @@ int ServoDriver::nowState()
 }
 
 
-void ServoDriver::writeCV(char ch)
+void ServoDriver::writeCV(void)
 {
-  if(ch == 0){
-    Dcc.setCV(52,gState_Function);        // 最終値のアクセサリ番号をCV_sdirに書き込み
-  }
-  if(ch == 1){
-    Dcc.setCV(59,gState_Function);        // 最終値のアクセサリ番号をCV_sdirに書き込み
-  }
+  Dcc.setCV(cv,gState_Function);        // 最終値のアクセサリ番号をCV_sdirに書き込み
 }
 
 void ServoDriver::SVattach(char ch)
 {
-  if(ch == 0){
-    ServoA.attach(lSP.port, lSP.MinAngle, lSP.MaxAngle);
-  }
-  if(ch == 1){
-    ServoB.attach(lSP.port, lSP.MinAngle, lSP.MaxAngle);
-  }
+
+  SERVO.attach(port, MinAngle, MaxAngle);
 }
 
 void ServoDriver::servoABwite(char ch, int ref)
 {
-  if(ch == 0){
-    ServoA.writeMicroseconds(ref);
-  }else if(ch == 1){
-    ServoB.writeMicroseconds(ref);
-  }
+  SERVO.writeMicroseconds(ref);
 }
 
 void ServoDriver::SVdetach(char ch)
 {
-  if(ch == 0){
-    ServoA.detach();
-  }
-  if(ch == 1){
-    ServoB.detach();
-  }
+  SERVO.detach();  
 }
 
-void ServoDriver::led(unsigned char ch)
+void ServoDriver::led( void )
 {
-  if(ch == 0){
-    if(gState_Function == 0){ //0:div/ 1:str|
-      digitalWrite(PIN_LED_STR1,OFF);
-      digitalWrite(PIN_LED_DIV1,ON);
-    } else {
-      digitalWrite(PIN_LED_STR1,ON);
-      digitalWrite(PIN_LED_DIV1,OFF);
-    }
-  }
-  if(ch == 1){
-    if(gState_Function == 0){
-      digitalWrite(PIN_LED_STR2,OFF);
-      digitalWrite(PIN_LED_DIV2,ON);
-    } else {
-      digitalWrite(PIN_LED_STR2,ON);
-      digitalWrite(PIN_LED_DIV2,OFF);
-    }
+  if(gState_Function == 0){ //0:div/ 1:str|
+    digitalWrite(STR,OFF);
+    digitalWrite(DIV,ON);
+  } else {
+    digitalWrite(STR,ON);
+    digitalWrite(DIV,OFF);
   }
 }
 
@@ -111,22 +77,22 @@ void ServoDriver::stateCheck()
         
   switch(state){
       case ST_STANDABY:               // 起動時一回だけの処理
-        led(lSP.ch);
-        if(gState_Function == lSP.sdir ){ // 前回最後のSTR/DIVが同じ？
+        led();
+        if(gState_Function == sdir ){ // 前回最後のSTR/DIVが同じ？
           if(gState_Function == 0){   // OFF?
-            SVattach(lSP.ch);
+            SVattach(ch);
             lPW.nowDeg = lPW.offDeg;
-            servoABwite(lSP.ch,(int)lPW.nowDeg);
+            servoABwite(ch,(int)lPW.nowDeg);
           } else {                    // ON?
-            SVattach(lSP.ch);
+            SVattach(ch);
             lPW.nowDeg = lPW.onDeg;
-            servoABwite(lSP.ch,(int)lPW.nowDeg);
+            servoABwite(ch,(int)lPW.nowDeg);
           }
-          SVdetach(lSP.ch);
+          SVdetach(ch);
           state = ST_IDLE;
           break;
         } else { // EEPROMの状態とコマンドステーションが異なっていた時の初回処理
-          if(lSP.sdir != 0 and gState_Function == 0){
+          if(sdir != 0 and gState_Function == 0){
               nextDeg = lPW.offDeg;
               nextDelta = lPW.offDelta;
               state = ST_RUN;         
@@ -145,7 +111,7 @@ void ServoDriver::stateCheck()
                 state = ST_IDLE;
                 return;
               }
-              SVattach(lSP.ch);
+              SVattach(ch);
               nextDeg = lPW.offDeg;
               nextDelta = lPW.offDelta;
             } else if(gState_Function != 0 ){    // ServoB:ON
@@ -153,7 +119,7 @@ void ServoDriver::stateCheck()
                 state = ST_IDLE;
                 return;
               }
-              SVattach(lSP.ch);
+              SVattach(ch);
               nextDeg = lPW.onDeg;
               nextDelta = lPW.onDelta;
             }
@@ -168,15 +134,15 @@ void ServoDriver::stateCheck()
             break;
 
     case ST_RUN:  //3
-                  servoABwite(lSP.ch,(int)lPW.nowDeg);
+                  servoABwite(ch,(int)lPW.nowDeg);
                   lPW.nowDeg = lPW.nowDeg + nextDelta;
 
                   if( ((updownFlg == DOWN) && (lPW.nowDeg <= nextDeg)) || ((updownFlg == UP) && (lPW.nowDeg >= nextDeg)) ) {       // 下りONまで行った？ or 上りONまで行った？
                     lPW.nowDeg = nextDeg;
-                    servoABwite(lSP.ch,(int)nextDeg);
-                    writeCV(lSP.ch);
-                    SVdetach(lSP.ch);
-                    led(lSP.ch);
+                    servoABwite(ch,(int)nextDeg);
+                    writeCV();
+                    SVdetach(ch);
+                    led();
                     state = ST_IDLE;
                   }
                   break;
@@ -187,7 +153,7 @@ void ServoDriver::stateCheck()
 
 void ServoDriver::gState( void )
 {
-  switch( adr ){
+  switch( servoAddress ){
     case 0:
             gState_Function = gState_F0;
             break;

@@ -43,18 +43,18 @@ void ServoDriver::writeCV(void)
   Dcc.setCV(cv,gState_Function);        // 最終値のアクセサリ番号をCV_sdirに書き込み
 }
 
-void ServoDriver::SVattach(char ch)
+void ServoDriver::SVattach( void )
 {
 
   SERVO.attach(port, MinAngle, MaxAngle);
 }
 
-void ServoDriver::servoABwite(char ch, int ref)
+void ServoDriver::ServoWite(int ref)
 {
   SERVO.writeMicroseconds(ref);
 }
 
-void ServoDriver::SVdetach(char ch)
+void ServoDriver::SVdetach( void )
 {
   SERVO.detach();  
 }
@@ -80,15 +80,15 @@ void ServoDriver::stateCheck()
         led();
         if(gState_Function == sdir ){ // 前回最後のSTR/DIVが同じ？
           if(gState_Function == 0){   // OFF?
-            SVattach(ch);
+            SVattach();
             lPW.nowDeg = lPW.offDeg;
-            servoABwite(ch,(int)lPW.nowDeg);
+            ServoWite((int)lPW.nowDeg);
           } else {                    // ON?
-            SVattach(ch);
+            SVattach();
             lPW.nowDeg = lPW.onDeg;
-            servoABwite(ch,(int)lPW.nowDeg);
+            ServoWite((int)lPW.nowDeg);
           }
-          SVdetach(ch);
+          SVdetach();
           state = ST_IDLE;
           break;
         } else { // EEPROMの状態とコマンドステーションが異なっていた時の初回処理
@@ -111,7 +111,7 @@ void ServoDriver::stateCheck()
                 state = ST_IDLE;
                 return;
               }
-              SVattach(ch);
+              SVattach();
               nextDeg = lPW.offDeg;
               nextDelta = lPW.offDelta;
             } else if(gState_Function != 0 ){    // ServoB:ON
@@ -119,7 +119,7 @@ void ServoDriver::stateCheck()
                 state = ST_IDLE;
                 return;
               }
-              SVattach(ch);
+              SVattach();
               nextDeg = lPW.onDeg;
               nextDelta = lPW.onDelta;
             }
@@ -134,14 +134,14 @@ void ServoDriver::stateCheck()
             break;
 
     case ST_RUN:  //3
-                  servoABwite(ch,(int)lPW.nowDeg);
+                  ServoWite((int)lPW.nowDeg);
                   lPW.nowDeg = lPW.nowDeg + nextDelta;
 
                   if( ((updownFlg == DOWN) && (lPW.nowDeg <= nextDeg)) || ((updownFlg == UP) && (lPW.nowDeg >= nextDeg)) ) {       // 下りONまで行った？ or 上りONまで行った？
                     lPW.nowDeg = nextDeg;
-                    servoABwite(ch,(int)nextDeg);
+                    ServoWite((int)nextDeg);
                     writeCV();
-                    SVdetach(ch);
+                    SVdetach();
                     led();
                     state = ST_IDLE;
                   }

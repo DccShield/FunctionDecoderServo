@@ -11,22 +11,6 @@
 #define ON 1
 #define OFF 0
 
-struct ServoParameter
-{
-  unsigned char ch;       // 0 or 1
-  unsigned char port;     
-  unsigned char onDeg;    // ON時の角度
-  unsigned char offDeg;   // OFF時の角度
-  unsigned char initDeg;  // 電源切る前の角度
-  unsigned char onSpeed;  // OFF->ONのスピード
-  unsigned char offSpeed; // ON->OFFのスピード
-  unsigned char sdir;     // gDirの最新値保存用
-  unsigned char servoAddress;  // ファンクションアドレス
-  unsigned int MinAngle;
-  unsigned int MaxAngle;
-};
-//ServoParameter *gServoParam = new ServoParameter[MAX_SERVO];
-
 struct ServoParameterPluseWidth
 {
   float nowDeg; // 現在の角度
@@ -35,9 +19,6 @@ struct ServoParameterPluseWidth
   float onDelta;  // OFF->ONのスピード
   float offDelta; // ON->OFFのスピード
 };
-//ServoParameterPluseWidth *gServoPW = new ServoParameterPluseWidth;
-
-
 
 extern uint8_t gState_F0;
 extern uint8_t gState_F1;
@@ -88,31 +69,20 @@ public:
 //  uint8_t gState_Function;
   
 private:
-  void SVattach(char ch);
-  void SVdetach(char ch);
-  void gState( void );
-  void servoABwite(char ch, int ref);
+  void SVattach(void);
+  void SVdetach(void);
+  void gState(void);
+  void ServoWite(int ref);
   void writeCV(void);  
   void led(void);
   
   char state = ST_STANDABY;    // ステート
   char updownFlg = 0;         // 0:up 1:down
-  char svch;
-  char adr;
 
   int nextDeg;
   float nextDelta;
 
   ServoParameterPluseWidth lPW;
-  
-//  unsigned char port;
-
-  float PwmRef;
-  float deltPwm;            // 10msあたりのpwm増加量
-  
-  int nowPwm;
-  int nextPwm;
-  int styTime;
 
   Servo   SERVO;  // create servo object to control a servo
   NmraDcc   Dcc;

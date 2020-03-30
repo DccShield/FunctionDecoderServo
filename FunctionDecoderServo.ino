@@ -38,10 +38,11 @@ void Dccinit(void);
 //使用クラスの宣言
 NmraDcc   Dcc;
 DCC_MSG  Packet;
+ServoDriver ServoCH0;
+ServoDriver ServoCH1;
 
-
-ServoParameter ServoA;
-ServoParameter ServoB;
+//ServoParameter ServoA;
+//ServoParameter ServoB;
 
 
 struct CVPair {
@@ -83,29 +84,38 @@ void notifyDccReset(uint8_t hardReset );
 void ServoInit(void)
 {
   //Init CVs
-  ServoA.ch = 0;
-  ServoA.port = PIN_SERVO1;
-  ServoA.onDeg = Dcc.getCV( 47 );    // ON時の角度
-  ServoA.offDeg = Dcc.getCV( 48 );   // OFF時の角度
-  ServoA.initDeg = Dcc.getCV( 49 );  // 電源切る前の角度
-  ServoA.onSpeed = Dcc.getCV( 50 );  // OFF->ONのスピード
-  ServoA.offSpeed = Dcc.getCV( 51 ); // ON->OFFのスピード
-  ServoA.sdir = Dcc.getCV( 52 );     // gDirの最新値保存用 STR/DIV
-  ServoA.servoAddress = Dcc.getCV( 53 );// サーボモータをON/OFFするファンクッション番号
-  ServoA.MinAngle = 670;
-  ServoA.MaxAngle = 2600;
+  ServoCH0.ch = 0;
+  ServoCH0.port = PIN_SERVO1;
+  ServoCH0.onDeg = Dcc.getCV( 47 );    // ON時の角度
+  ServoCH0.offDeg = Dcc.getCV( 48 );   // OFF時の角度
+  ServoCH0.initDeg = Dcc.getCV( 49 );  // 電源切る前の角度
+  ServoCH0.onSpeed = Dcc.getCV( 50 );  // OFF->ONのスピード
+  ServoCH0.offSpeed = Dcc.getCV( 51 ); // ON->OFFのスピード
+  ServoCH0.sdir = Dcc.getCV( 52 );     // gDirの最新値保存用 STR/DIV
+  ServoCH0.cv = 52;
+  ServoCH0.servoAddress = Dcc.getCV( 53 );// サーボモータをON/OFFするファンクッション番号
+  ServoCH0.STR = PIN_LED_STR1;
+  ServoCH0.DIV = PIN_LED_DIV1;
+  ServoCH0.MinAngle = 670;
+  ServoCH0.MaxAngle = 2600;
+  ServoCH0.Set();
     
-  ServoB.ch = 1;
-  ServoB.port = PIN_SERVO2;
-  ServoB.onDeg = Dcc.getCV( 54 );    // ON時の角度
-  ServoB.offDeg = Dcc.getCV( 55 );   // OFF時の角度
-  ServoB.initDeg = Dcc.getCV( 56 );  // 電源切る前の角度
-  ServoB.onSpeed = Dcc.getCV( 57 );  // OFF->ONのスピード
-  ServoB.offSpeed = Dcc.getCV( 58 ); // ON->OFFのスピード
-  ServoB.sdir = Dcc.getCV( 59 );     // gDirの最新値保存用 STR/DIV
-  ServoB.servoAddress = Dcc.getCV( 60 );// サーボモータをON/OFFするファンクッション番号  
-  ServoB.MinAngle = 400;
-  ServoB.MaxAngle = 2100;
+  ServoCH1.ch = 1;
+  ServoCH1.port = PIN_SERVO2;
+  ServoCH1.onDeg = Dcc.getCV( 54 );    // ON時の角度
+  ServoCH1.offDeg = Dcc.getCV( 55 );   // OFF時の角度
+  ServoCH1.initDeg = Dcc.getCV( 56 );  // 電源切る前の角度
+  ServoCH1.onSpeed = Dcc.getCV( 57 );  // OFF->ONのスピード
+  ServoCH1.offSpeed = Dcc.getCV( 58 ); // ON->OFFのスピード
+  ServoCH1.sdir = Dcc.getCV( 59 );     // gDirの最新値保存用 STR/DIV
+  ServoCH1.cv = 59;
+  ServoCH1.servoAddress = Dcc.getCV( 60 );// サーボモータをON/OFFするファンクッション番号  
+  ServoCH1.STR = PIN_LED_STR2;
+  ServoCH1.DIV = PIN_LED_DIV2;
+  ServoCH1.MinAngle = 400;
+  ServoCH1.MaxAngle = 2100;
+  ServoCH1.Set();
+
 }
 
 
@@ -151,9 +161,6 @@ void setup()
 // Arduino main loop
 //---------------------------------------------------------------------
 void loop() {
-static ServoDriver ServoCH0(ServoA);
-static ServoDriver ServoCH1(ServoB);
-
   // You MUST call the NmraDcc.process() method frequently from the Arduino loop() function for correct library operation
   Dcc.process();
 
